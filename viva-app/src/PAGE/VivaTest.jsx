@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import "../CSS/vivatest.css";
 import { useSelector } from "react-redux";
 import { getApiUrl } from "../utils/api";
+import { CheckCircle2 } from "lucide-react";
 
 const VivaTest = () => {
   const [timeLeft, setTimeLeft] = useState(null); // in seconds
@@ -19,6 +20,7 @@ const VivaTest = () => {
   const [done, setDone] = useState(false);
   const [submittedData, setSubmittedData] = useState([]);
   const [marksPerQuestion, setMarksPerQuestion] = useState(1);
+  const [vivaTitle, setVivaTitle] = useState("");
 
   useEffect(() => {
     if (UserInfo && UserInfo.length > 0) {
@@ -147,6 +149,8 @@ const VivaTest = () => {
   const HandleGenrateQ = async (data) => {
     // Set marks per question from viva data
     setMarksPerQuestion(data.marksPerQuestion || 1);
+    // Set viva title
+    setVivaTitle(data.title || "Viva Test");
 
     try {
       // Check if result already exists for this student and viva
@@ -468,8 +472,7 @@ const VivaTest = () => {
 
   return (
     <div className="viva-test-page-wrapper">
-      <div className="viva-container">
-      <h2 className="viva-title">📝 Viva Test</h2>
+      {/* Timer positioned at top right of entire screen */}
       <div className="timestyle">
         {FinalQuetion.length > 0 && (
           <p>
@@ -480,6 +483,12 @@ const VivaTest = () => {
           </p>
         )}
       </div>
+      
+      <div className="viva-container">
+      <h2 className="viva-title">
+        <CheckCircle2 size={24} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+        {vivaTitle}
+      </h2>
 
       {FinalQuetion.length > 0 &&
         FinalQuetion.map((q, i) => (

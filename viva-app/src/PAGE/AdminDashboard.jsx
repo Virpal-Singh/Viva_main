@@ -18,7 +18,6 @@ const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [isAddingTeacher, setIsAddingTeacher] = useState(false);
-  const [showEmailPreview, setShowEmailPreview] = useState(false);
   const [newTeacher, setNewTeacher] = useState({
     name: "",
     email: "",
@@ -296,14 +295,6 @@ const AdminDashboard = () => {
               </div>
 
               <div className="admin-modal-actions">
-                <button 
-                  type="button" 
-                  onClick={() => setShowEmailPreview(true)} 
-                  className="admin-preview-btn"
-                  disabled={!newTeacher.name || !newTeacher.email || !newTeacher.ennumber || !newTeacher.password}
-                >
-                  👁️ Preview Email
-                </button>
                 <button type="submit" className="admin-submit-btn" disabled={isAddingTeacher}>
                   {isAddingTeacher ? (
                     <>
@@ -318,72 +309,6 @@ const AdminDashboard = () => {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Email Preview Modal */}
-      {showEmailPreview && (
-        <div className="admin-modal-overlay" onClick={() => setShowEmailPreview(false)}>
-          <div className="admin-email-preview-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="admin-modal-header">
-              <h2>📧 Email Preview</h2>
-              <button onClick={() => setShowEmailPreview(false)} className="admin-modal-close">×</button>
-            </div>
-            <div className="admin-email-preview-content">
-              <div className="email-preview-container">
-                <div className="email-preview-header">
-                  <h1>🎓 Welcome to AI Viva Portal</h1>
-                  <p style={{margin: '10px 0 0 0', fontSize: '14px', opacity: 0.9}}>Teacher Account Created Successfully</p>
-                </div>
-                <div className="email-preview-body">
-                  <div style={{background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))', borderLeft: '4px solid #667eea', padding: '15px', borderRadius: '8px', marginBottom: '20px'}}>
-                    <strong>🎉 Congratulations!</strong><br/>
-                    You have been selected as a Teacher at AI Viva Portal.
-                  </div>
-                  
-                  <p className="email-message">
-                    <strong>Hello {newTeacher.name},</strong><br/><br/>
-                    Your teacher account has been created successfully. You can now login to the portal and start creating classes, managing vivas, and evaluating students.
-                  </p>
-                  
-                  <h3 style={{color: '#667eea', marginTop: '30px'}}>📋 Your Login Credentials:</h3>
-                  <div className="email-credentials">
-                    <div className="email-cred-row">
-                      <div className="email-cred-label">👤 Full Name</div>
-                      <div className="email-cred-value">{newTeacher.name}</div>
-                    </div>
-                    <div className="email-cred-row">
-                      <div className="email-cred-label">🎓 Enrollment Number (Username)</div>
-                      <div className="email-cred-value">{newTeacher.ennumber}</div>
-                    </div>
-                    <div className="email-cred-row">
-                      <div className="email-cred-label">🔐 Password</div>
-                      <div className="email-cred-value">{newTeacher.password}</div>
-                    </div>
-                  </div>
-                  
-                  <div style={{background: '#fef3c7', borderLeft: '4px solid #f59e0b', padding: '15px', borderRadius: '8px', margin: '20px 0', fontSize: '14px', color: '#92400e'}}>
-                    <strong>🔒 Security Tip:</strong> Please change your password after your first login for better security.
-                  </div>
-                  
-                  <div style={{textAlign: 'center', margin: '30px 0'}}>
-                    <p style={{marginBottom: '15px', color: '#666'}}>Ready to get started?</p>
-                    <div className="email-login-btn">
-                      🚀 Login to Portal
-                    </div>
-                  </div>
-                  
-                  <p style={{marginTop: '30px', fontSize: '14px', color: '#666', lineHeight: '1.6'}}>
-                    If you have any questions or need assistance, please contact the administrator.
-                  </p>
-                </div>
-                <div className="email-preview-footer">
-                  <p><strong>© 2024 AI Viva Portal</strong></p>
-                  <p style={{marginTop: '10px'}}>This is an automated information email. Please do not reply.</p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}

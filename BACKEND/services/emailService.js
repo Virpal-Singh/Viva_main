@@ -450,6 +450,109 @@ export const sendResultEmail = async (studentData, vivaData, resultData) => {
   }
 };
 
+// Send Student Registration Email
+export const sendStudentRegistrationEmail = async (studentData, teacherName) => {
+  const { name, email, ennumber, password } = studentData;
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "🎓 Welcome to AI Viva Portal - Your Account is Ready!",
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; }
+          .header { background: linear-gradient(135deg, #667eea, #764ba2); padding: 30px; text-align: center; color: white; }
+          .header h1 { margin: 0; font-size: 28px; }
+          .header p { margin: 10px 0 0 0; font-size: 14px; opacity: 0.9; }
+          .content { padding: 30px; color: #333; }
+          .message { font-size: 16px; line-height: 1.6; margin-bottom: 25px; }
+          .welcome-box { background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); border-left: 4px solid #667eea; padding: 15px; border-radius: 8px; margin: 20px 0; }
+          .credentials { background: #f9fafb; border: 2px solid #667eea; border-radius: 8px; padding: 20px; margin: 20px 0; }
+          .cred-row { padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
+          .cred-row:last-child { border-bottom: none; }
+          .cred-label { color: #6b7280; font-weight: 600; font-size: 14px; margin-bottom: 5px; }
+          .cred-value { color: #1f2937; font-weight: 700; font-size: 16px; font-family: monospace; background: white; padding: 8px; border-radius: 4px; display: inline-block; }
+          .login-section { text-align: center; margin: 30px 0; }
+          .login-btn { display: inline-block; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 14px 40px; border-radius: 25px; text-decoration: none; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); }
+          .info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 8px; margin: 20px 0; font-size: 14px; color: #92400e; }
+          .footer { text-align: center; padding: 20px; background: #f9fafb; color: #666; font-size: 13px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>🎓 Welcome to AI Viva Portal</h1>
+            <p>Your Student Account is Ready!</p>
+          </div>
+          <div class="content">
+            <div class="welcome-box">
+              <strong>🎉 Congratulations ${name}!</strong><br>
+              Your registration has been successfully completed by <strong>${teacherName}</strong>.
+            </div>
+            
+            <p class="message">
+              <strong>Hello ${name},</strong><br><br>
+              Welcome to AI Viva Portal! Your student account has been created and you can now login to access your classes, take viva exams, and track your progress.
+            </p>
+            
+            <h3 style="color: #667eea; margin-top: 30px;">📋 Your Login Credentials:</h3>
+            <div class="credentials">
+              <div class="cred-row">
+                <div class="cred-label">👤 Full Name</div>
+                <div class="cred-value">${name}</div>
+              </div>
+              <div class="cred-row">
+                <div class="cred-label">📧 Email Address</div>
+                <div class="cred-value">${email}</div>
+              </div>
+              <div class="cred-row">
+                <div class="cred-label">🎓 Enrollment Number</div>
+                <div class="cred-value">${ennumber}</div>
+              </div>
+              <div class="cred-row">
+                <div class="cred-label">🔐 Password</div>
+                <div class="cred-value">${password}</div>
+              </div>
+            </div>
+            
+            <div class="info-box">
+              <strong>🔒 Security Tip:</strong> Please change your password after your first login for better security. Keep your credentials safe and never share them with anyone.
+            </div>
+            
+            <div class="login-section">
+              <p style="margin-bottom: 15px; color: #666;">Ready to start your learning journey?</p>
+              <a href="http://localhost:5173/login" class="login-btn">
+                🚀 Login to Viva Portal
+              </a>
+            </div>
+            
+            <p style="margin-top: 30px; font-size: 14px; color: #666; line-height: 1.6;">
+              If you have any questions or need assistance, please contact your teacher <strong>${teacherName}</strong>.
+            </p>
+          </div>
+          <div class="footer">
+            <p><strong>© 2024 AI Viva Portal</strong></p>
+            <p style="margin-top: 10px;">This is an automated email. Please do not reply.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    return { success: true };
+  } catch (error) {
+    console.error("Error sending student registration email:", error);
+    return { success: false, error: error.message };
+  }
+};
+
 // Send Teacher Credentials Email (NOT OTP - This is an information email)
 export const sendTeacherCredentialsEmail = async (teacherData) => {
   const { name, email, ennumber, password } = teacherData;

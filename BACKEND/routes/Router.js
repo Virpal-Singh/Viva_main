@@ -18,13 +18,14 @@ import {
 } from "../model/AllModel.js";
 
 // Try to import email service, but don't fail if it's not available
-let generateOTP, sendOTPEmail, sendResultEmail, sendTeacherCredentialsEmail;
+let generateOTP, sendOTPEmail, sendResultEmail, sendTeacherCredentialsEmail, sendStudentRegistrationEmail;
 try {
   const emailService = await import("../services/emailService.js");
   generateOTP = emailService.generateOTP;
   sendOTPEmail = emailService.sendOTPEmail;
   sendResultEmail = emailService.sendResultEmail;
   sendTeacherCredentialsEmail = emailService.sendTeacherCredentialsEmail;
+  sendStudentRegistrationEmail = emailService.sendStudentRegistrationEmail;
   console.log("✅ Email service loaded successfully");
 } catch (error) {
   console.error("❌ Failed to load email service:", error.message);
@@ -33,6 +34,7 @@ try {
   sendOTPEmail = async () => ({ success: false, error: "Email service not available" });
   sendResultEmail = async () => ({ success: false, error: "Email service not available" });
   sendTeacherCredentialsEmail = async () => ({ success: false, error: "Email service not available" });
+  sendStudentRegistrationEmail = async () => ({ success: false, error: "Email service not available" });
 }
 import axios from "axios";
 import mongoose from "mongoose";
@@ -111,18 +113,18 @@ router.post("/send-otp", async (req, res) => {
   }
 
   try {
-    // Check if user already exists by enrollment number
+    // Check if enrollment number already exists (verified users only)
     const existingUserByEnrollment = await User.findOne({ ennumber });
     if (existingUserByEnrollment && existingUserByEnrollment.isVerified) {
-      console.log("❌ User already verified:", ennumber);
-      return res.status(409).json({ message: "Student already registered with this enrollment number", success: false });
+      console.log("❌ Enrollment number already registered:", ennumber);
+      return res.status(409).json({ message: "Enrollment number already registered", success: false });
     }
 
-    // Check if email exists
+    // Check if email already exists (verified users only)
     const existingUserByEmail = await User.findOne({ email });
-    if (existingUserByEmail && existingUserByEmail.isVerified && existingUserByEmail.ennumber !== ennumber) {
-      console.log("❌ Email already exists with different enrollment:", email);
-      return res.status(409).json({ message: "Email already exists", success: false });
+    if (existingUserByEmail && existingUserByEmail.isVerified) {
+      console.log("❌ Email already registered:", email);
+      return res.status(409).json({ message: "Email already registered", success: false });
     }
 
     // Generate OTP
@@ -832,6 +834,9 @@ router.post("/get/teacher-classes-with-stats", async (req, res) => {
       return res.status(200).json({ message: [], totalStats: { totalClasses: 0, totalVivas: 0, totalStudents: 0 } });
     }
 
+    // Get all class codes for this teacher
+    const classCodes = classes.map(c => c.code);
+
     // For each class, get student count and viva count with timeout
     const classesWithStats = await Promise.all(
       classes.map(async (classItem) => {
@@ -872,11 +877,25 @@ router.post("/get/teacher-classes-with-stats", async (req, res) => {
       })
     );
 
-    // Calculate total stats
+    // Get unique students across all teacher's classes
+    let uniqueStudentCount = 0;
+    try {
+      const uniqueStudents = await Promise.race([
+        classStudent.distinct('student', { code: { $in: classCodes } }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+      ]).catch(() => []);
+      uniqueStudentCount = uniqueStudents.length;
+    } catch (error) {
+      console.error("Error fetching unique students:", error);
+      // Fallback to sum if distinct fails
+      uniqueStudentCount = classesWithStats.reduce((sum, c) => sum + c.studentCount, 0);
+    }
+
+    // Calculate total stats with unique student count
     const totalStats = {
       totalClasses: classesWithStats.length,
       totalVivas: classesWithStats.reduce((sum, c) => sum + c.vivaCount, 0),
-      totalStudents: classesWithStats.reduce((sum, c) => sum + c.studentCount, 0),
+      totalStudents: uniqueStudentCount,
     };
 
     res.json({ message: classesWithStats, totalStats: totalStats });
@@ -1238,11 +1257,39 @@ router.post("/get/analytics", async (req, res) => {
       })
     );
 
-    // 3. Send analytics response
+    // 3. Get unique students enrolled across all teacher's classes (not from results)
+    const classCodes = classes.map(c => c.code);
+    const uniqueStudentIds = await classStudent.distinct('student', { code: { $in: classCodes } });
+    
+    // Fetch unique student details
+    const uniqueStudentsData = await Promise.all(
+      uniqueStudentIds.map(async (studentId) => {
+        try {
+          const studentData = await User.findById(studentId).lean();
+          return {
+            studentId: studentId,
+            name: studentData?.name || "Unknown Student",
+            enrollment: studentData?.ennumber || "N/A",
+            email: studentData?.email || "N/A",
+          };
+        } catch (error) {
+          console.error("Error fetching unique student:", studentId, error);
+          return {
+            studentId: studentId,
+            name: "Unknown Student",
+            enrollment: "N/A",
+            email: "N/A",
+          };
+        }
+      })
+    );
+
+    // 4. Send analytics response with unique students list
     res.json({
       teacherId,
       totalClasses: classes.length,
       classes: classData,
+      uniqueStudents: uniqueStudentsData, // Add unique students list
     });
   } catch (err) {
     console.error("Error in getTeacherAnalytics:", err);
@@ -1592,7 +1639,12 @@ router.post("/admin/add-teacher", async (req, res) => {
     
     // Send email with credentials
     try {
-      const emailResult = await sendOTPEmail(email, password, name);
+      const emailResult = await sendTeacherCredentialsEmail({
+        name,
+        email,
+        ennumber,
+        password
+      });
       
       if (!emailResult.success) {
         console.error("Failed to send credentials email:", emailResult.error);
@@ -1782,6 +1834,114 @@ router.post("/verify-update-otp", async (req, res) => {
   } catch (error) {
     console.error("Error verifying OTP:", error);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Bulk Register Students from CSV
+router.post("/bulk-register-students", async (req, res) => {
+  try {
+    const { students, teacherId } = req.body;
+
+    if (!students || !Array.isArray(students) || students.length === 0) {
+      return res.status(400).json({ message: "No student data provided" });
+    }
+
+    // Get teacher info for email
+    const teacher = await User.findById(teacherId);
+    if (!teacher) {
+      return res.status(404).json({ message: "Teacher not found" });
+    }
+
+    const results = {
+      success: [],
+      failed: [],
+      total: students.length
+    };
+
+    // Process each student
+    for (const studentData of students) {
+      try {
+        const { enrollment, name, email, password } = studentData;
+
+        // Validate required fields
+        if (!enrollment || !name || !email || !password) {
+          results.failed.push({
+            enrollment: enrollment || 'N/A',
+            name: name || 'N/A',
+            reason: 'Missing required fields'
+          });
+          continue;
+        }
+
+        // Check if student already exists
+        const existingStudent = await User.findOne({
+          $or: [{ ennumber: enrollment }, { email: email }]
+        });
+
+        if (existingStudent) {
+          results.failed.push({
+            enrollment,
+            name,
+            reason: 'Student already exists'
+          });
+          continue;
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create new student
+        const newStudent = new User({
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          ennumber: enrollment.trim(),
+          password: hashedPassword,
+          role: 0, // Student role
+          isVerified: true // Auto-verify bulk registered students
+        });
+
+        await newStudent.save();
+
+        // Send welcome email
+        try {
+          await sendStudentRegistrationEmail(
+            {
+              name: name.trim(),
+              email: email.trim().toLowerCase(),
+              ennumber: enrollment.trim(),
+              password: password // Send original password in email
+            },
+            teacher.name
+          );
+        } catch (emailError) {
+          console.error(`Email failed for ${email}:`, emailError);
+          // Don't fail registration if email fails
+        }
+
+        results.success.push({
+          enrollment,
+          name,
+          email
+        });
+
+      } catch (error) {
+        console.error(`Error registering student ${studentData.enrollment}:`, error);
+        results.failed.push({
+          enrollment: studentData.enrollment || 'N/A',
+          name: studentData.name || 'N/A',
+          reason: error.message || 'Unknown error'
+        });
+      }
+    }
+
+    res.status(200).json({
+      message: "Bulk registration completed",
+      results: results
+    });
+
+  } catch (error) {
+    console.error("Error in bulk registration:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 

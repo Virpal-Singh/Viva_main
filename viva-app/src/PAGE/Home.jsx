@@ -26,14 +26,18 @@ const Home = () => {
   const [username, setUsername] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
-  const [stats, setStats] = useState({ users: 0, satisfaction: 0, assessments: 0 });
+  const [stats, setStats] = useState({
+    users: 0,
+    satisfaction: 0,
+    assessments: 0,
+  });
 
   // Verify token and fetch user info on mount
   useEffect(() => {
     const verifyToken = async () => {
       try {
         const token = localStorage.getItem("authToken");
-        
+
         // If no token, user is not logged in
         if (!token) {
           setIsLoadingUser(false);
@@ -51,14 +55,11 @@ const Home = () => {
         }
 
         // Fetch user info from API
-        const response = await fetch(
-          getApiUrl("bin/getUsername"),
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token }),
-          }
-        );
+        const response = await fetch(getApiUrl("bin/getUsername"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
 
         if (!response.ok) {
           setIsLoadingUser(false);
@@ -66,11 +67,11 @@ const Home = () => {
         }
 
         const data = await response.json();
-        
+
         // Dispatch to Redux
         dispatch(addBasicInfo(data));
         dispatch(login());
-        
+
         // Set local state
         setUsername(data.payload.name);
         setUserRole(data.payload.role);
@@ -100,33 +101,33 @@ const Home = () => {
     const fetchStats = async () => {
       // Set fallback data immediately
       const fallbackData = { users: 125, satisfaction: 98, assessments: 200 };
-      
+
       try {
         // Try to fetch real data
         const [usersResponse, vivasResponse] = await Promise.allSettled([
           fetch(getApiUrl("bin/get/all-users-count")),
-          fetch(getApiUrl("bin/get/all-viva"))
+          fetch(getApiUrl("bin/get/all-viva")),
         ]);
-        
+
         let totalUsers = fallbackData.users;
         let totalVivas = fallbackData.assessments;
-        
+
         // Use real data if available
-        if (usersResponse.status === 'fulfilled' && usersResponse.value.ok) {
+        if (usersResponse.status === "fulfilled" && usersResponse.value.ok) {
           const usersData = await usersResponse.value.json();
           totalUsers = usersData.count || fallbackData.users;
         }
-        
-        if (vivasResponse.status === 'fulfilled' && vivasResponse.value.ok) {
+
+        if (vivasResponse.status === "fulfilled" && vivasResponse.value.ok) {
           const vivasData = await vivasResponse.value.json();
           totalVivas = vivasData.length || fallbackData.assessments;
         }
-        
+
         // Animate with real or fallback data
-        animateStats({ 
-          users: totalUsers, 
-          satisfaction: 98, 
-          assessments: totalVivas 
+        animateStats({
+          users: totalUsers,
+          satisfaction: 98,
+          assessments: totalVivas,
         });
       } catch (error) {
         console.log("Using fallback stats due to API error");
@@ -148,7 +149,7 @@ const Home = () => {
     const timer = setInterval(() => {
       currentStep++;
       const progress = currentStep / steps;
-      
+
       setStats({
         users: Math.floor(targets.users * progress),
         satisfaction: Math.floor(targets.satisfaction * progress),
@@ -183,21 +184,23 @@ const Home = () => {
           <section className="hero">
             {UserInfo.length > 0 ? (
               <>
-              <div className="namee">
+                <div className="namee">
+                  <h1>Welcome</h1>
                   <h1>
-                    Welcome 
+                    <span className="gradient-text nameee">{username}</span>
                   </h1>
-                    <h1><span className="gradient-text nameee">{username}</span></h1>
                 </div>
               </>
             ) : (
               <>
-              <div className="title">
-                <span className="badge">AI-Powered Education Platform</span>
-                <h1>
-                  Transform Education with <br />
-                  <span className="gradient-text">AI Excellence</span>
-                </h1>
+                <div className="title">
+                  <h1>
+                    Transform Education with <br />
+                    <span className="gradient-text">AI Excellence</span>
+                  </h1>
+                  <p className="platform-subtitle-text">
+                    AI-Powered Education Platform
+                  </p>
                 </div>
               </>
             )}
@@ -294,9 +297,18 @@ const Home = () => {
                 knowledge level.
               </p>
               <ul>
-                <li><CheckCircle2 size={16} className="check-icon" /> Natural Language Processing</li>
-                <li><CheckCircle2 size={16} className="check-icon" /> Adaptive Questioning</li>
-                <li><CheckCircle2 size={16} className="check-icon" /> Real-time Analysis</li>
+                <li>
+                  <CheckCircle2 size={16} className="check-icon" /> Natural
+                  Language Processing
+                </li>
+                <li>
+                  <CheckCircle2 size={16} className="check-icon" /> Adaptive
+                  Questioning
+                </li>
+                <li>
+                  <CheckCircle2 size={16} className="check-icon" /> Real-time
+                  Analysis
+                </li>
               </ul>
             </div>
 
@@ -311,9 +323,18 @@ const Home = () => {
                 progress visualization, and predictive learning analytics.
               </p>
               <ul>
-                <li><CheckCircle2 size={16} className="check-icon" /> Performance Metrics</li>
-                <li><CheckCircle2 size={16} className="check-icon" /> Progress Tracking</li>
-                <li><CheckCircle2 size={16} className="check-icon" /> Predictive Insights</li>
+                <li>
+                  <CheckCircle2 size={16} className="check-icon" /> Performance
+                  Metrics
+                </li>
+                <li>
+                  <CheckCircle2 size={16} className="check-icon" /> Progress
+                  Tracking
+                </li>
+                <li>
+                  <CheckCircle2 size={16} className="check-icon" /> Predictive
+                  Insights
+                </li>
               </ul>
             </div>
 
@@ -329,9 +350,18 @@ const Home = () => {
                 assessments.
               </p>
               <ul>
-                <li><CheckCircle2 size={16} className="check-icon" /> Tab Monitoring</li>
-                <li><CheckCircle2 size={16} className="check-icon" /> Behavior Analysis</li>
-                <li><CheckCircle2 size={16} className="check-icon" /> Secure Environment</li>
+                <li>
+                  <CheckCircle2 size={16} className="check-icon" /> Tab
+                  Monitoring
+                </li>
+                <li>
+                  <CheckCircle2 size={16} className="check-icon" /> Behavior
+                  Analysis
+                </li>
+                <li>
+                  <CheckCircle2 size={16} className="check-icon" /> Secure
+                  Environment
+                </li>
               </ul>
             </div>
           </div>
@@ -348,83 +378,114 @@ const Home = () => {
           <div className="testimonials-row testimonials-row-ltr">
             {/* First set */}
             <div className="testimonial-card">
-              <div className="testimonial-avatar">RS</div>
+              <div className="testimonial-avatar">CD</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"AI Viva has completely transformed how I conduct assessments. The automated grading saves me hours every week!"</p>
-                <h4 className="testimonial-name">Rajesh Sharma</h4>
-                <span className="testimonial-role">Computer Science Teacher</span>
+                <p className="testimonial-text">
+                  "AI Viva has completely transformed how I conduct assessments.
+                  The automated grading saves me hours every week!"
+                </p>
+                <h4 className="testimonial-name">Professor C.D. Patel</h4>
+                <span className="testimonial-role">
+                  Computer Science Teacher
+                </span>
               </div>
             </div>
 
             <div className="testimonial-card">
-              <div className="testimonial-avatar">PK</div>
+              <div className="testimonial-avatar">SM</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"The AI-powered questions are incredibly smart. It feels like having a real conversation with a teacher!"</p>
-                <h4 className="testimonial-name">Priya Kapoor</h4>
+                <p className="testimonial-text">
+                  "The AI-powered questions are incredibly smart. It feels like
+                  having a real conversation with a teacher!"
+                </p>
+                <h4 className="testimonial-name">Sarbaz Malek</h4>
                 <span className="testimonial-role">Engineering Student</span>
               </div>
             </div>
 
             <div className="testimonial-card">
-              <div className="testimonial-avatar">AM</div>
+              <div className="testimonial-avatar">AG</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"The analytics dashboard gives me deep insights into my students' performance. Best educational tool I've used!"</p>
-                <h4 className="testimonial-name">Amit Mehta</h4>
+                <p className="testimonial-text">
+                  "The analytics dashboard gives me deep insights into my
+                  students' performance. Best educational tool I've used!"
+                </p>
+                <h4 className="testimonial-name">Aruna Gurjar</h4>
                 <span className="testimonial-role">Mathematics Professor</span>
               </div>
             </div>
 
             <div className="testimonial-card">
-              <div className="testimonial-avatar">SK</div>
+              <div className="testimonial-avatar">UP</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"I love how the platform adapts to my learning pace. The instant feedback helps me improve quickly."</p>
-                <h4 className="testimonial-name">Sneha Kumar</h4>
+                <p className="testimonial-text">
+                  "I love how the platform adapts to my learning pace. The
+                  instant feedback helps me improve quickly."
+                </p>
+                <h4 className="testimonial-name">Utsav Patel</h4>
                 <span className="testimonial-role">Medical Student</span>
               </div>
             </div>
 
             <div className="testimonial-card">
-              <div className="testimonial-avatar">VG</div>
+              <div className="testimonial-avatar">NG</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"The anti-cheat system ensures fair assessments. My students take tests seriously now!"</p>
-                <h4 className="testimonial-name">Vikram Gupta</h4>
+                <p className="testimonial-text">
+                  "The anti-cheat system ensures fair assessments. My students
+                  take tests seriously now!"
+                </p>
+                <h4 className="testimonial-name">Naman Gupta</h4>
                 <span className="testimonial-role">Physics Teacher</span>
               </div>
             </div>
 
             {/* Duplicate set for seamless loop */}
             <div className="testimonial-card">
-              <div className="testimonial-avatar">RS</div>
+              <div className="testimonial-avatar">PP</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"AI Viva has completely transformed how I conduct assessments. The automated grading saves me hours every week!"</p>
-                <h4 className="testimonial-name">Rajesh Sharma</h4>
-                <span className="testimonial-role">Computer Science Teacher</span>
+                <p className="testimonial-text">
+                  "AI Viva has completely transformed how I conduct assessments.
+                  The automated grading saves me hours every week!"
+                </p>
+                <h4 className="testimonial-name">Priyanshi Patel</h4>
+                <span className="testimonial-role">
+                  Computer Science Teacher
+                </span>
               </div>
             </div>
 
             <div className="testimonial-card">
-              <div className="testimonial-avatar">PK</div>
+              <div className="testimonial-avatar">SD</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"The AI-powered questions are incredibly smart. It feels like having a real conversation with a teacher!"</p>
-                <h4 className="testimonial-name">Priya Kapoor</h4>
+                <p className="testimonial-text">
+                  "The AI-powered questions are incredibly smart. It feels like
+                  having a real conversation with a teacher!"
+                </p>
+                <h4 className="testimonial-name">Sachin Daraji</h4>
                 <span className="testimonial-role">Engineering Student</span>
               </div>
             </div>
 
             <div className="testimonial-card">
-              <div className="testimonial-avatar">AM</div>
+              <div className="testimonial-avatar">VP</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"The analytics dashboard gives me deep insights into my students' performance. Best educational tool I've used!"</p>
-                <h4 className="testimonial-name">Amit Mehta</h4>
+                <p className="testimonial-text">
+                  "The analytics dashboard gives me deep insights into my
+                  students' performance. Best educational tool I've used!"
+                </p>
+                <h4 className="testimonial-name">Vikas Parmar</h4>
                 <span className="testimonial-role">Mathematics Professor</span>
               </div>
             </div>
 
             <div className="testimonial-card">
-              <div className="testimonial-avatar">SK</div>
+              <div className="testimonial-avatar">NB</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"I love how the platform adapts to my learning pace. The instant feedback helps me improve quickly."</p>
-                <h4 className="testimonial-name">Sneha Kumar</h4>
+                <p className="testimonial-text">
+                  "I love how the platform adapts to my learning pace. The
+                  instant feedback helps me improve quickly."
+                </p>
+                <h4 className="testimonial-name">Nidhi Bharai</h4>
                 <span className="testimonial-role">Medical Student</span>
               </div>
             </div>
@@ -432,7 +493,10 @@ const Home = () => {
             <div className="testimonial-card">
               <div className="testimonial-avatar">VG</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"The anti-cheat system ensures fair assessments. My students take tests seriously now!"</p>
+                <p className="testimonial-text">
+                  "The anti-cheat system ensures fair assessments. My students
+                  take tests seriously now!"
+                </p>
                 <h4 className="testimonial-name">Vikram Gupta</h4>
                 <span className="testimonial-role">Physics Teacher</span>
               </div>
@@ -445,35 +509,47 @@ const Home = () => {
             <div className="testimonial-card">
               <div className="testimonial-avatar">NP</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"The interface is so intuitive! Even my non-tech-savvy colleagues can use it easily."</p>
-                <h4 className="testimonial-name">Neha Patel</h4>
+                <p className="testimonial-text">
+                  "The interface is so intuitive! Even my non-tech-savvy
+                  colleagues can use it easily."
+                </p>
+                <h4 className="testimonial-name">Nikki Patel</h4>
                 <span className="testimonial-role">English Teacher</span>
               </div>
             </div>
 
             <div className="testimonial-card">
-              <div className="testimonial-avatar">RV</div>
+              <div className="testimonial-avatar">SC</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"Best platform for online assessments. The email notifications keep me updated on my progress!"</p>
-                <h4 className="testimonial-name">Rahul Verma</h4>
+                <p className="testimonial-text">
+                  "Best platform for online assessments. The email notifications
+                  keep me updated on my progress!"
+                </p>
+                <h4 className="testimonial-name">Sanjay Choudhary</h4>
                 <span className="testimonial-role">MBA Student</span>
               </div>
             </div>
 
             <div className="testimonial-card">
-              <div className="testimonial-avatar">MS</div>
+              <div className="testimonial-avatar">WW</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"Creating vivas is so quick now. I can generate quality questions in minutes instead of hours!"</p>
-                <h4 className="testimonial-name">Meera Singh</h4>
+                <p className="testimonial-text">
+                  "Creating vivas is so quick now. I can generate quality
+                  questions in minutes instead of hours!"
+                </p>
+                <h4 className="testimonial-name">Walter white</h4>
                 <span className="testimonial-role">Chemistry Professor</span>
               </div>
             </div>
 
             <div className="testimonial-card">
-              <div className="testimonial-avatar">AJ</div>
+              <div className="testimonial-avatar">SP</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"The real-time monitoring during tests gives me confidence that assessments are fair and secure."</p>
-                <h4 className="testimonial-name">Arjun Joshi</h4>
+                <p className="testimonial-text">
+                  "The real-time monitoring during tests gives me confidence
+                  that assessments are fair and secure."
+                </p>
+                <h4 className="testimonial-name">Shailesh Patel</h4>
                 <span className="testimonial-role">IT Student</span>
               </div>
             </div>
@@ -481,7 +557,10 @@ const Home = () => {
             <div className="testimonial-card">
               <div className="testimonial-avatar">DK</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"The detailed result analysis helps me identify exactly where my students need more support."</p>
+                <p className="testimonial-text">
+                  "The detailed result analysis helps me identify exactly where
+                  my students need more support."
+                </p>
                 <h4 className="testimonial-name">Deepak Khanna</h4>
                 <span className="testimonial-role">Biology Teacher</span>
               </div>
@@ -491,7 +570,10 @@ const Home = () => {
             <div className="testimonial-card">
               <div className="testimonial-avatar">NP</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"The interface is so intuitive! Even my non-tech-savvy colleagues can use it easily."</p>
+                <p className="testimonial-text">
+                  "The interface is so intuitive! Even my non-tech-savvy
+                  colleagues can use it easily."
+                </p>
                 <h4 className="testimonial-name">Neha Patel</h4>
                 <span className="testimonial-role">English Teacher</span>
               </div>
@@ -500,7 +582,10 @@ const Home = () => {
             <div className="testimonial-card">
               <div className="testimonial-avatar">RV</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"Best platform for online assessments. The email notifications keep me updated on my progress!"</p>
+                <p className="testimonial-text">
+                  "Best platform for online assessments. The email notifications
+                  keep me updated on my progress!"
+                </p>
                 <h4 className="testimonial-name">Rahul Verma</h4>
                 <span className="testimonial-role">MBA Student</span>
               </div>
@@ -509,17 +594,23 @@ const Home = () => {
             <div className="testimonial-card">
               <div className="testimonial-avatar">MS</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"Creating vivas is so quick now. I can generate quality questions in minutes instead of hours!"</p>
+                <p className="testimonial-text">
+                  "Creating vivas is so quick now. I can generate quality
+                  questions in minutes instead of hours!"
+                </p>
                 <h4 className="testimonial-name">Meera Singh</h4>
                 <span className="testimonial-role">Chemistry Professor</span>
               </div>
             </div>
 
             <div className="testimonial-card">
-              <div className="testimonial-avatar">AJ</div>
+              <div className="testimonial-avatar">VS</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"The real-time monitoring during tests gives me confidence that assessments are fair and secure."</p>
-                <h4 className="testimonial-name">Arjun Joshi</h4>
+                <p className="testimonial-text">
+                  "The real-time monitoring during tests gives me confidence
+                  that assessments are fair and secure."
+                </p>
+                <h4 className="testimonial-name">Virpal Singh</h4>
                 <span className="testimonial-role">IT Student</span>
               </div>
             </div>
@@ -527,7 +618,10 @@ const Home = () => {
             <div className="testimonial-card">
               <div className="testimonial-avatar">DK</div>
               <div className="testimonial-content">
-                <p className="testimonial-text">"The detailed result analysis helps me identify exactly where my students need more support."</p>
+                <p className="testimonial-text">
+                  "The detailed result analysis helps me identify exactly where
+                  my students need more support."
+                </p>
                 <h4 className="testimonial-name">Deepak Khanna</h4>
                 <span className="testimonial-role">Biology Teacher</span>
               </div>

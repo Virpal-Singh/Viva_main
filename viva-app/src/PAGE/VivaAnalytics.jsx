@@ -116,7 +116,6 @@ const VivaAnalytics = () => {
     let totalScores = 0;
     let totalSubmissions = 0;
     const allStudents = [];
-    const allStudentsList = []; // For complete student list
     const classPerformance = [];
     const classDetails = [];
 
@@ -135,21 +134,28 @@ const VivaAnalytics = () => {
       let classSubmissions = 0;
 
       classStudents.forEach((student) => {
-        console.log("Processing student:", student);
+        let score = parseFloat(student.score) || 0;
         
-        const score = student.score || 0;
-        classScoreSum += score;
-        totalScores += score;
+        console.log(`📊 Student: ${student.name}, Original Score: ${student.score}, Parsed: ${score}`);
+        
+        // Check if score is stored as decimal (0-1) and convert to percentage (0-100)
+        if (score > 0 && score < 1) {
+          console.log(`🔄 Converting decimal ${score} to percentage ${score * 100}`);
+          score = score * 100;
+        }
 
         if (score > 0) {
+          classScoreSum += score;
+          totalScores += score;
           classSubmissions++;
           totalSubmissions++;
+          
+          console.log(`✅ Added score ${score} to class sum. Class total: ${classScoreSum}, Submissions: ${classSubmissions}`);
 
           // Categorize performance
-          const percentage = score;
-          if (percentage >= 80) excellent++;
-          else if (percentage >= 60) good++;
-          else if (percentage >= 40) average++;
+          if (score >= 80) excellent++;
+          else if (score >= 60) good++;
+          else if (score >= 40) average++;
           else belowAverage++;
 
           // Use data directly from backend (already populated)
@@ -162,19 +168,15 @@ const VivaAnalytics = () => {
             className: cls.classname,
           });
         }
-
-        // Add to complete list - use backend data directly
-        allStudentsList.push({
-          studentId: student.studentId,
-          name: student.name || "Unknown Student",
-          enrollment: student.enrollment || "N/A",
-          email: student.email || "N/A",
-          score: score,
-          className: cls.classname,
-        });
       });
 
       const classAvg = classSubmissions > 0 ? (classScoreSum / classSubmissions).toFixed(1) : 0;
+      
+      console.log(`📈 Class: ${cls.classname}`);
+      console.log(`   Total Score Sum: ${classScoreSum}`);
+      console.log(`   Submissions: ${classSubmissions}`);
+      console.log(`   Average: ${classAvg}%`);
+      console.log(`   Total Students: ${classTotal}`);
 
       classPerformance.push({
         name: cls.classname,
@@ -182,21 +184,132 @@ const VivaAnalytics = () => {
         students: classTotal,
       });
 
+      // Calculate proper success rate for this class using same logic as ClassOverview
+      let properClassSuccessRate = 0;
+      
       classDetails.push({
         className: cls.classname,
         code: cls.code,
         totalStudents: classTotal,
         totalVivas: 0,
-        averageScore: parseFloat(classAvg),
+        averageScore: parseFloat(classAvg), // Will be updated below
         completionRate: classTotal > 0 ? ((classSubmissions / classTotal) * 100).toFixed(1) : 0,
       });
     });
 
     console.log("All students for top 5:", allStudents);
-    console.log("All students list:", allStudentsList.slice(0, 5));
 
-    // Calculate overall average
+    // Calculate overall average (keep original for other uses)
     const overallAverage = totalSubmissions > 0 ? (totalScores / totalSubmissions).toFixed(1) : 0;
+    
+    // Calculate proper success rate using same logic as teacher dashboard
+    let properSuccessRate = 0;
+    try {
+      console.log("🎯 Calculating proper success rate for analytics...");
+      
+      // Get teacher classes with stats (same API as teacher dashboard)
+      const classesResponse = await fetch(getApiUrl("bin/get/teacher-classes-with-stats"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teacherid: teacherId }),
+      });
+
+      if (classesResponse.ok) {
+        const classesData = await classesResponse.json();
+        const classes = classesData.message || [];
+        
+        console.log("📊 Found classes for success rate calculation:", classes.length);
+        
+        let totalSuccessRate = 0;
+        let classesWithData = 0;
+
+        // Calculate success rate for each class using same logic as teacher dashboard
+        for (let i = 0; i < classes.length; i++) {
+          const classItem = classes[i];
+          try {
+            let classSuccessRate = 0;
+            const studentScores = {};
+
+            // Get all vivas for this class
+            const vivasResponse = await fetch(getApiUrl("bin/get/vivavbyclasscode"), {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ classCode: classItem.code }),
+            });
+
+            if (vivasResponse.ok) {
+              const vivas = await vivasResponse.json();
+              
+              // For each viva, get results and calculate percentage scores
+              for (const viva of vivas) {
+                try {
+                  const totalQuestions = parseInt(viva.totalquetions) || 5;
+                  const marksPerQuestion = viva.marksPerQuestion || 1;
+                  const totalPossibleMarks = totalQuestions * marksPerQuestion;
+
+                  const vivaResultsResponse = await fetch(getApiUrl("bin/get/all-vivaresult"), {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ vivaId: viva._id }),
+                  });
+
+                  if (vivaResultsResponse.ok) {
+                    const vivaResults = await vivaResultsResponse.json();
+                    const submittedResults = vivaResults.filter(r => r.active === false);
+                    
+                    submittedResults.forEach(result => {
+                      const studentId = result.student;
+                      if (!studentScores[studentId]) {
+                        studentScores[studentId] = [];
+                      }
+                      const percentageScore = (result.score || 0) / totalPossibleMarks * 100;
+                      studentScores[studentId].push(percentageScore);
+                    });
+                  }
+                } catch (vivaError) {
+                  console.error(`Error processing viva ${viva._id}:`, vivaError);
+                }
+              }
+
+              // Calculate class success rate
+              const studentAverages = [];
+              Object.keys(studentScores).forEach(studentId => {
+                const scores = studentScores[studentId];
+                const studentAvg = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+                studentAverages.push(studentAvg);
+              });
+
+              if (studentAverages.length > 0) {
+                const overallAvg = studentAverages.reduce((sum, avg) => sum + avg, 0) / studentAverages.length;
+                classSuccessRate = Math.round(overallAvg);
+                totalSuccessRate += classSuccessRate;
+                classesWithData++;
+                
+                console.log(`✅ Class ${classItem.code} success rate: ${classSuccessRate}%`);
+                
+                // Update classDetails with proper success rate
+                const classDetailIndex = classDetails.findIndex(cd => cd.code === classItem.code);
+                if (classDetailIndex !== -1) {
+                  classDetails[classDetailIndex].averageScore = classSuccessRate;
+                  console.log(`📝 Updated classDetails for ${classItem.code}: ${classSuccessRate}%`);
+                }
+              }
+            }
+          } catch (classError) {
+            console.error(`Error calculating success rate for class ${classItem.code}:`, classError);
+          }
+        }
+
+        properSuccessRate = classesWithData > 0 ? Math.round(totalSuccessRate / classesWithData) : 0;
+        console.log(`🎯 Final analytics success rate: ${properSuccessRate}% (from ${classesWithData} classes)`);
+      } else {
+        console.warn("⚠️ Failed to fetch teacher classes, using fallback calculation");
+        properSuccessRate = parseFloat(overallAverage);
+      }
+    } catch (error) {
+      console.error("Error calculating proper success rate:", error);
+      properSuccessRate = parseFloat(overallAverage); // Fallback to original calculation
+    }
 
     // Calculate completion rate
     const completionRate = totalStudents > 0 ? ((totalSubmissions / totalStudents) * 100).toFixed(1) : 0;
@@ -243,11 +356,14 @@ const VivaAnalytics = () => {
       }
     }
 
+    // Use unique students list from backend (no duplicates)
+    const allStudentsList = data.uniqueStudents || [];
+    
     setAnalyticsData({
-      totalStudents,
+      totalStudents: allStudentsList.length, // Use unique student count, not duplicates
       totalVivas: data.totalClasses || 0,
       totalClasses: data.totalClasses || 0,
-      averageScore: parseFloat(overallAverage),
+      averageScore: properSuccessRate, // Use proper success rate calculation
       completionRate: parseFloat(completionRate),
       classPerformance,
       performanceDistribution,
@@ -255,7 +371,7 @@ const VivaAnalytics = () => {
       classDetails,
       classActivity,
       classVivasData, // Class-wise vivas count
-      allStudentsList, // Complete student list
+      allStudentsList, // Complete student list - now unique from backend
     });
   };
 
@@ -355,7 +471,7 @@ const VivaAnalytics = () => {
           </div>
           <div className="analytics-stat-content">
             <h3>{analyticsData.averageScore}%</h3>
-            <p>Average Score</p>
+            <p>Success Rate</p>
             <span className="analytics-stat-trend">
               <Target size={16} />
               Overall performance

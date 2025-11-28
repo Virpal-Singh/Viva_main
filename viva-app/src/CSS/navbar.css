@@ -24,8 +24,32 @@
   gap: 10px;
 }
 
-.logo-icon {
-  font-size: 28px;
+.logo-icon-animated {
+  width: 32px;
+  height: 32px;
+  color: #9b5de5;
+  animation: logoFloat 3s ease-in-out infinite;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.logo-icon-animated:hover {
+  transform: scale(1.1) rotate(5deg);
+  color: #f15bb5;
+}
+
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.logo-icon-animated svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 8px rgba(155, 93, 229, 0.3));
 }
 
 .logo-text {
@@ -34,6 +58,17 @@
   background: linear-gradient(90deg, #9b5de5, #f15bb5);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  animation: gradientShift 3s ease infinite;
+  background-size: 200% 200%;
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .logo-sub {
@@ -71,10 +106,21 @@
 }
 
 .notification {
-  position: relative;
+  position: relative !important;
   color: #ccc;
   cursor: pointer;
-  overflow: visible;
+  overflow: visible !important;
+  display: inline-block !important;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  /* Ensure proper stacking context */
+  isolation: isolate;
+}
+
+.notification:hover {
+  color: #f15bb5;
+  background: rgba(241, 91, 181, 0.1);
 }
 
 .profile-icon-link {
@@ -89,15 +135,55 @@
   color: #f15bb5;
 }
 
-.badge {
-  position: absolute;
-  top: -6px;
-  right: -8px;
-  background: #f15bb5;
-  color: white;
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 50%;
+/* Badge styling with maximum specificity */
+.glassy-nav .nav-right .notification .badge,
+.nav-right .notification .badge,
+.notification .badge,
+span.badge {
+  position: absolute !important;
+  top: -8px !important;
+  right: -8px !important;
+  background: linear-gradient(135deg, #f15bb5, #9b5de5) !important;
+  color: white !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  min-width: 18px !important;
+  height: 18px !important;
+  width: 18px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  z-index: 1000 !important;
+  border: 2px solid rgba(30, 30, 30, 0.9) !important;
+  box-shadow: 0 0 12px rgba(241, 91, 181, 0.6), 0 2px 8px rgba(155, 93, 229, 0.4) !important;
+  margin: 0 !important;
+  transform: none !important;
+  left: auto !important;
+  bottom: auto !important;
+  float: none !important;
+  clear: none !important;
+  vertical-align: baseline !important;
+  animation: badgePulse 2s ease-in-out infinite !important;
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(241, 91, 181, 0.6), 0 2px 8px rgba(155, 93, 229, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(241, 91, 181, 0.8), 0 2px 12px rgba(155, 93, 229, 0.6);
+  }
+}
+
+/* Ensure notification container is properly positioned */
+.glassy-nav .nav-right .notification,
+.nav-right .notification {
+  position: relative !important;
+  display: inline-block !important;
+  overflow: visible !important;
 }
 
 .signin-link {
@@ -185,6 +271,8 @@
 
   .nav-right {
     display: flex; /* Keep notification bell visible on mobile */
+    align-items: center;
+    gap: 12px;
   }
   
   .nav-right .signin-link,
@@ -194,6 +282,34 @@
 
   .menu-toggle {
     display: block;
+  }
+
+  /* Mobile logo adjustments */
+  .logo-icon-animated {
+    width: 28px;
+    height: 28px;
+  }
+
+  .logo-text {
+    font-size: 18px;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+  }
+
+  /* Mobile notification badge adjustments */
+  .notification {
+    padding: 6px;
+  }
+
+  .badge {
+    top: -6px;
+    right: -6px;
+    min-width: 16px;
+    height: 16px;
+    font-size: 9px;
+    border-width: 1px;
   }
 }
 
@@ -658,4 +774,41 @@
   .teacher-profile-info h3 {
     font-size: 1.3rem;
   }
+}
+
+/* CRITICAL FIX: Force badge positioning */
+.notification > span.badge {
+  position: absolute !important;
+  top: -8px !important;
+  right: -8px !important;
+  width: 18px !important;
+  height: 18px !important;
+  background: #f15bb5 !important;
+  color: white !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 9999 !important;
+  border: 2px solid rgba(30, 30, 30, 0.8) !important;
+  box-shadow: 0 2px 8px rgba(241, 91, 181, 0.4) !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  vertical-align: baseline !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  left: auto !important;
+  bottom: auto !important;
+  float: none !important;
+  clear: none !important;
+}
+
+/* Light theme override */
+.light-theme .notification > span.badge {
+  background: #8a7a7f !important;
+  border: 2px solid #fafbfc !important;
+  box-shadow: 0 2px 8px rgba(138, 122, 127, 0.3) !important;
 }

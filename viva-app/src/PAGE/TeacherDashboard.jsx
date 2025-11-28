@@ -21,9 +21,11 @@ import {
   Bell,
   X,
   AlertTriangle,
+  Download,
 } from "lucide-react";
 import "../CSS/teacher.css";
 import "../CSS/global-loading.css";
+import TeacherReportCard from "../components/TeacherReportCard";
 
 const TeacherDashboard = () => {
   const [userid, setUsername] = useState("");
@@ -46,6 +48,12 @@ const TeacherDashboard = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showTeacherReport, setShowTeacherReport] = useState(false);
+  const [showBulkRegisterModal, setShowBulkRegisterModal] = useState(false);
+  const [csvFile, setCsvFile] = useState(null);
+  const [csvData, setCsvData] = useState([]);
+  const [isProcessingCSV, setIsProcessingCSV] = useState(false);
+  const [registrationResults, setRegistrationResults] = useState(null);
   const { UserInfo } = useSelector((state) => state.user);
 
   useEffect(() => {
@@ -123,37 +131,80 @@ const TeacherDashboard = () => {
           // Use real stats from backend
           setStats(result.totalStats);
 
-          // Calculate real success rate from analytics
+          // Calculate real success rate using same logic as report card
           try {
-            const analyticsResponse = await fetch(
-              getApiUrl("bin/get/analytics"),
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ teacherId: userid }),
-              }
-            );
-            const analyticsData = await analyticsResponse.json();
+            let totalSuccessRate = 0;
+            let classesWithData = 0;
 
-            if (analyticsData.classes && analyticsData.classes.length > 0) {
-              let totalScore = 0;
-              let totalSubmissions = 0;
+            // Calculate success rate for each class
+            for (const classItem of result.message) {
+              try {
+                let classSuccessRate = 0;
+                const studentScores = {};
 
-              analyticsData.classes.forEach((cls) => {
-                cls.students.forEach((student) => {
-                  if (student.score > 0) {
-                    totalScore += student.score;
-                    totalSubmissions++;
-                  }
+                // Get all vivas for this class
+                const vivasResponse = await fetch(getApiUrl("bin/get/vivavbyclasscode"), {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ classCode: classItem.code }),
                 });
-              });
 
-              const successRate =
-                totalSubmissions > 0
-                  ? Math.round(totalScore / totalSubmissions)
-                  : 0;
-              setStats((prev) => ({ ...prev, successRate }));
+                if (vivasResponse.ok) {
+                  const vivas = await vivasResponse.json();
+                  
+                  // For each viva, get results and calculate percentage scores
+                  for (const viva of vivas) {
+                    try {
+                      const totalQuestions = parseInt(viva.totalquetions) || 5;
+                      const marksPerQuestion = viva.marksPerQuestion || 1;
+                      const totalPossibleMarks = totalQuestions * marksPerQuestion;
+
+                      const vivaResultsResponse = await fetch(getApiUrl("bin/get/all-vivaresult"), {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ vivaId: viva._id }),
+                      });
+
+                      if (vivaResultsResponse.ok) {
+                        const vivaResults = await vivaResultsResponse.json();
+                        const submittedResults = vivaResults.filter(r => r.active === false);
+                        
+                        submittedResults.forEach(result => {
+                          const studentId = result.student;
+                          if (!studentScores[studentId]) {
+                            studentScores[studentId] = [];
+                          }
+                          const percentageScore = (result.score || 0) / totalPossibleMarks * 100;
+                          studentScores[studentId].push(percentageScore);
+                        });
+                      }
+                    } catch (vivaError) {
+                      console.error(`Error processing viva ${viva._id}:`, vivaError);
+                    }
+                  }
+
+                  // Calculate class success rate
+                  const studentAverages = [];
+                  Object.keys(studentScores).forEach(studentId => {
+                    const scores = studentScores[studentId];
+                    const studentAvg = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+                    studentAverages.push(studentAvg);
+                  });
+
+                  if (studentAverages.length > 0) {
+                    const overallAvg = studentAverages.reduce((sum, avg) => sum + avg, 0) / studentAverages.length;
+                    classSuccessRate = Math.round(overallAvg);
+                    totalSuccessRate += classSuccessRate;
+                    classesWithData++;
+                  }
+                }
+              } catch (classError) {
+                console.error(`Error calculating success rate for class ${classItem.code}:`, classError);
+              }
             }
+
+            const successRate = classesWithData > 0 ? Math.round(totalSuccessRate / classesWithData) : 0;
+            setStats((prev) => ({ ...prev, successRate }));
           } catch (error) {
             console.log("Error fetching success rate:", error);
           }
@@ -341,6 +392,89 @@ const TeacherDashboard = () => {
     }
   };
 
+  // CSV Template Download
+  const handleDownloadTemplate = () => {
+    const csvContent = "enrollment,name,email,password\n12345,John Doe,john@example.com,password123\n67890,Jane Smith,jane@example.com,password456";
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'student_registration_template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Handle CSV File Upload
+  const handleCSVUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setCsvFile(file);
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      const text = e.target.result;
+      const lines = text.split('\n').filter(line => line.trim());
+      
+      if (lines.length < 2) {
+        alert('CSV file is empty or invalid');
+        return;
+      }
+
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const students = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim());
+        if (values.length >= 4 && values[0]) {
+          students.push({
+            enrollment: values[0],
+            name: values[1],
+            email: values[2],
+            password: values[3]
+          });
+        }
+      }
+
+      setCsvData(students);
+    };
+
+    reader.readAsText(file);
+  };
+
+  // Submit Bulk Registration
+  const handleBulkRegister = async () => {
+    if (csvData.length === 0) {
+      alert('Please upload a CSV file first');
+      return;
+    }
+
+    setIsProcessingCSV(true);
+    try {
+      const response = await fetch(getApiUrl('bin/bulk-register-students'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          students: csvData,
+          teacherId: userid
+        })
+      });
+
+      const result = await response.json();
+      setRegistrationResults(result.results);
+      
+      // Reset form
+      setCsvFile(null);
+      setCsvData([]);
+      
+    } catch (error) {
+      console.error('Error in bulk registration:', error);
+      alert('Failed to register students. Please try again.');
+    } finally {
+      setIsProcessingCSV(false);
+    }
+  };
+
   const getReasonIcon = (reason) => {
     switch (reason) {
       case "tab-switch":
@@ -380,6 +514,14 @@ const TeacherDashboard = () => {
             </div>
           </div>
           <div className="teacher-header-actions">
+            <button
+              className="teacher-report-btn"
+              onClick={() => setShowTeacherReport(true)}
+              title="Generate Teacher Report"
+            >
+              <Download size={20} />
+              <span>Report Card</span>
+            </button>
             <button
               className="teacher-notification-btn"
               onClick={() => setShowNotifications(!showNotifications)}
@@ -579,29 +721,19 @@ const TeacherDashboard = () => {
               Create New Class
             </button>
             <button
-              className="teacher-action-btn"
-              style={{ opacity: 0.6, cursor: "not-allowed" }}
-              disabled
+              className="teacher-action-btn teacher-action-primary"
+              onClick={() => setShowBulkRegisterModal(true)}
             >
-              <Upload size={20} />
-              Upload Syllabus
-              <span
-                style={{
-                  marginLeft: "auto",
-                  fontSize: "0.85rem",
-                  color: "#9ca3af",
-                }}
-              >
-                Coming Soon
-              </span>
+              <Users size={20} />
+              Register Students
             </button>
             <button
               className="teacher-action-btn"
               style={{ opacity: 0.6, cursor: "not-allowed" }}
               disabled
             >
-              <Calendar size={20} />
-              Schedule Test
+              <Upload size={20} />
+              Upload Syllabus
               <span
                 style={{
                   marginLeft: "auto",
@@ -928,6 +1060,217 @@ const TeacherDashboard = () => {
                   </>
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Teacher Report Card Modal */}
+      <TeacherReportCard
+        isOpen={showTeacherReport}
+        onClose={() => setShowTeacherReport(false)}
+        teacherData={{
+          _id: userid,
+          name: teacherName,
+          email: UserInfo?.[0]?.payload?.email || "N/A",
+          ennumber: UserInfo?.[0]?.payload?.ennumber || "N/A"
+        }}
+      />
+
+      {/* Bulk Register Students Modal */}
+      {showBulkRegisterModal && (
+        <div
+          className="teacher-modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isProcessingCSV) {
+              setShowBulkRegisterModal(false);
+              setCsvFile(null);
+              setCsvData([]);
+              setRegistrationResults(null);
+            }
+          }}
+        >
+          <div className="teacher-modal-content" style={{ maxWidth: '700px' }}>
+            <div className="teacher-modal-header">
+              <h2>
+                <Users size={24} />
+                Bulk Register Students
+              </h2>
+              <button
+                className="teacher-modal-close"
+                onClick={() => {
+                  setShowBulkRegisterModal(false);
+                  setCsvFile(null);
+                  setCsvData([]);
+                  setRegistrationResults(null);
+                }}
+                disabled={isProcessingCSV}
+              >
+                ×
+              </button>
+            </div>
+            <div className="teacher-modal-body">
+              {!registrationResults ? (
+                <>
+                  <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(139, 92, 246, 0.1)', borderRadius: '8px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+                    <h4 style={{ margin: '0 0 10px 0', color: '#8b5cf6' }}>📋 Instructions:</h4>
+                    <ol style={{ margin: '0', paddingLeft: '20px', color: '#9ca3af', lineHeight: '1.8' }}>
+                      <li>Download the CSV template below</li>
+                      <li>Fill in student details (Enrollment, Name, Email, Password)</li>
+                      <li>Upload the completed CSV file</li>
+                      <li>Review the preview and click Register</li>
+                      <li>Students will receive welcome emails with their credentials</li>
+                    </ol>
+                  </div>
+
+                  <button
+                    onClick={handleDownloadTemplate}
+                    className="teacher-btn-secondary"
+                    style={{ width: '100%', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
+                  >
+                    <Download size={20} />
+                    Download CSV Template
+                  </button>
+
+                  <div className="teacher-form-group">
+                    <label>Upload CSV File</label>
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={handleCSVUpload}
+                      disabled={isProcessingCSV}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '2px dashed rgba(139, 92, 246, 0.3)',
+                        borderRadius: '8px',
+                        background: 'rgba(139, 92, 246, 0.05)',
+                        cursor: 'pointer'
+                      }}
+                    />
+                  </div>
+
+                  {csvData.length > 0 && (
+                    <div style={{ marginTop: '20px' }}>
+                      <h4 style={{ color: '#8b5cf6', marginBottom: '10px' }}>
+                        Preview ({csvData.length} students)
+                      </h4>
+                      <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '8px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                          <thead style={{ background: 'rgba(139, 92, 246, 0.1)', position: 'sticky', top: 0 }}>
+                            <tr>
+                              <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(139, 92, 246, 0.3)' }}>Enrollment</th>
+                              <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(139, 92, 246, 0.3)' }}>Name</th>
+                              <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid rgba(139, 92, 246, 0.3)' }}>Email</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {csvData.map((student, index) => (
+                              <tr key={index} style={{ borderBottom: '1px solid rgba(139, 92, 246, 0.1)' }}>
+                                <td style={{ padding: '10px' }}>{student.enrollment}</td>
+                                <td style={{ padding: '10px' }}>{student.name}</td>
+                                <td style={{ padding: '10px' }}>{student.email}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div>
+                  <h3 style={{ color: '#10b981', marginBottom: '15px' }}>
+                    ✅ Registration Complete!
+                  </h3>
+                  <div style={{ marginBottom: '20px', padding: '15px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                    <p style={{ margin: '5px 0', color: '#10b981' }}>
+                      <strong>✓ Successfully Registered:</strong> {registrationResults.success.length} students
+                    </p>
+                    {registrationResults.failed.length > 0 && (
+                      <p style={{ margin: '5px 0', color: '#ef4444' }}>
+                        <strong>✗ Failed:</strong> {registrationResults.failed.length} students
+                      </p>
+                    )}
+                  </div>
+
+                  {registrationResults.success.length > 0 && (
+                    <div style={{ marginBottom: '20px' }}>
+                      <h4 style={{ color: '#10b981', marginBottom: '10px' }}>Successfully Registered:</h4>
+                      <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '8px', padding: '10px' }}>
+                        {registrationResults.success.map((student, index) => (
+                          <div key={index} style={{ padding: '8px', borderBottom: '1px solid rgba(16, 185, 129, 0.1)' }}>
+                            ✓ {student.name} ({student.enrollment}) - {student.email}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {registrationResults.failed.length > 0 && (
+                    <div>
+                      <h4 style={{ color: '#ef4444', marginBottom: '10px' }}>Failed Registrations:</h4>
+                      <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', padding: '10px' }}>
+                        {registrationResults.failed.map((student, index) => (
+                          <div key={index} style={{ padding: '8px', borderBottom: '1px solid rgba(239, 68, 68, 0.1)' }}>
+                            ✗ {student.name} ({student.enrollment}) - {student.reason}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="teacher-modal-footer">
+              {!registrationResults ? (
+                <>
+                  <button
+                    className="teacher-btn-secondary"
+                    onClick={() => {
+                      setShowBulkRegisterModal(false);
+                      setCsvFile(null);
+                      setCsvData([]);
+                    }}
+                    disabled={isProcessingCSV}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="teacher-btn-primary"
+                    onClick={handleBulkRegister}
+                    disabled={isProcessingCSV || csvData.length === 0}
+                    style={{
+                      opacity: csvData.length === 0 ? 0.5 : 1
+                    }}
+                  >
+                    {isProcessingCSV ? (
+                      <>
+                        <Loader2 className="teacher-spinner" size={18} />
+                        Registering...
+                      </>
+                    ) : (
+                      <>
+                        <Users size={18} />
+                        Register {csvData.length} Students
+                      </>
+                    )}
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="teacher-btn-primary"
+                  onClick={() => {
+                    setShowBulkRegisterModal(false);
+                    setCsvFile(null);
+                    setCsvData([]);
+                    setRegistrationResults(null);
+                  }}
+                  style={{ width: '100%' }}
+                >
+                  Close
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { User, Mail, Hash, BookOpen, LogOut, Edit2, Check, X, Lock } from "lucide-react";
+import { User, Mail, Hash, BookOpen, LogOut, Edit2, Check, X, Lock, FileText } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "../CSS/studentprofile.css";
 import { getApiUrl } from "../utils/api";
+import ReportCard from "../components/ReportCard";
 
 const StudentProfile = () => {
   const navigate = useNavigate();
@@ -40,6 +41,9 @@ const StudentProfile = () => {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("theme") || "dark";
   });
+
+  // Report card state
+  const [showReportCard, setShowReportCard] = useState(false);
 
   useEffect(() => {
     if (UserInfo && UserInfo.length > 0) {
@@ -483,6 +487,11 @@ const StudentProfile = () => {
           </div>
         </div>
 
+        {/* Report Card Button */}
+        <button onClick={() => setShowReportCard(true)} className="btn-report-card">
+          <FileText size={20} /> Generate Report Card
+        </button>
+
         {/* Logout Button */}
         <button onClick={handleLogout} className="btn-logout">
           <LogOut size={20} /> Logout
@@ -680,6 +689,13 @@ const StudentProfile = () => {
           </div>
         </div>
       )}
+
+      {/* Report Card Modal */}
+      <ReportCard
+        isOpen={showReportCard}
+        onClose={() => setShowReportCard(false)}
+        userData={userData}
+      />
 
       <ToastContainer
         position="top-right"

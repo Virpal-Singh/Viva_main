@@ -58,6 +58,33 @@
   gap: 15px;
 }
 
+.teacher-header-actions {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.teacher-report-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: none;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.teacher-report-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+}
+
 .teacher-notification-btn {
   position: relative;
   background: rgba(139, 92, 246, 0.1);
@@ -1268,6 +1295,24 @@
 
   .notification-empty span {
     font-size: 0.85rem;
+  }
+
+  /* Teacher header actions mobile adjustments */
+  .teacher-header-actions {
+    gap: 10px;
+  }
+  
+  .teacher-report-btn {
+    padding: 10px 15px;
+    font-size: 13px;
+  }
+  
+  .teacher-report-btn span {
+    display: none;
+  }
+  
+  .teacher-report-btn {
+    padding: 10px 12px;
   }
 
   /* Teacher notification button mobile adjustments */

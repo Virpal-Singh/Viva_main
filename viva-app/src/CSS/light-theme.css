@@ -11,7 +11,7 @@
   --light-bg-card: #ffffff;
   --light-bg-hover: #f1f5f9;
   
-  --light-text-primary: #0f172a;
+  --light-text-primary: #1e293b;
   --light-text-secondary: #475569;
   --light-text-tertiary: #64748b;
   --light-text-muted: #94a3b8;
@@ -25,10 +25,10 @@
   
   --light-border-color: #e2e8f0;
   --light-border-hover: #cbd5e1;
-  --light-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --light-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --light-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  --light-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --light-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --light-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --light-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --light-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
   
   --light-success: #10b981;
   --light-warning: #f59e0b;
@@ -40,30 +40,99 @@
 /* Fix for body and html background */
 html.light-theme,
 body.light-theme {
-  background: var(--light-bg-primary) !important;
-  background-color: var(--light-bg-primary) !important;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 25%, #ffffff 50%, #f1f5f9 75%, #f8fafc 100%) !important;
+  background-attachment: fixed !important;
   color: var(--light-text-primary);
 }
 
 /* Fix for root element */
 .light-theme #root {
-  background: var(--light-bg-primary);
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 25%, #ffffff 50%, #f1f5f9 75%, #f8fafc 100%);
+  background-attachment: fixed;
   min-height: 100vh;
 }
 
 /* Fix for main app container */
 .light-theme .App {
-  background: var(--light-bg-primary);
+  background: transparent;
   min-height: 100vh;
+}
+
+/* ========== BEAUTIFUL BACKGROUND PATTERNS ========== */
+.light-theme body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ========== BEAUTIFUL SHINY CARD STYLING ========== */
+.light-theme .profile-header,
+.light-theme .info-card,
+.light-theme .teacher-stat-card,
+.light-theme .teacher-quick-actions-card,
+.light-theme .teacher-activity-card,
+.light-theme .teacher-class-card,
+.light-theme .feature-card,
+.light-theme .testimonial-card,
+.light-theme .class-overview-stat-card,
+.light-theme .class-overview-viva-card,
+.light-theme .viva-container,
+.light-theme .viva-monitor-header,
+.light-theme .viva-monitor-stat-card,
+.light-theme .simple-question-card,
+.light-theme .joinclass-card,
+.light-theme .classvivaspage-card,
+.light-theme .analytics-stat-card,
+.light-theme .analytics-chart-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%) !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.light-theme .profile-header:hover,
+.light-theme .info-card:hover,
+.light-theme .teacher-stat-card:hover,
+.light-theme .teacher-class-card:hover,
+.light-theme .feature-card:hover,
+.light-theme .testimonial-card:hover,
+.light-theme .class-overview-stat-card:hover,
+.light-theme .class-overview-viva-card:hover,
+.light-theme .simple-question-card:hover,
+.light-theme .joinclass-card:hover,
+.light-theme .classvivaspage-card:hover,
+.light-theme .analytics-stat-card:hover,
+.light-theme .analytics-chart-card:hover {
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  box-shadow: 
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -4px rgba(0, 0, 0, 0.1),
+    0 0 0 3px rgba(59, 130, 246, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
 }
 
 /* ========== STUDENT PROFILE - LIGHT THEME ========== */
 .light-theme .student-profile-container {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 25%, #ffffff 50%, #f1f5f9 75%, #f8fafc 100%);
 }
 
 .light-theme .profile-loading {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 25%, #ffffff 50%, #f1f5f9 75%, #f8fafc 100%);
   color: var(--light-text-primary);
 }
 
@@ -95,9 +164,12 @@ body.light-theme {
 }
 
 .light-theme .profile-stats-card {
-  background: var(--light-bg-card);
-  border: 1px solid var(--light-border-color);
-  box-shadow: var(--light-shadow-md);
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .light-theme .stat-icon {
@@ -141,14 +213,18 @@ body.light-theme {
 }
 
 .light-theme .edit-input {
-  background: var(--light-bg-tertiary);
+  background: #ffffff;
   border: 1px solid var(--light-border-color);
   color: var(--light-text-primary);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .light-theme .edit-input:focus {
   border-color: var(--light-accent-blue);
-  background: var(--light-bg-card);
+  background: #ffffff;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.05),
+    0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .light-theme .btn-edit {
@@ -194,14 +270,20 @@ body.light-theme {
 }
 
 .light-theme .modal-overlay {
-  background: rgba(15, 23, 42, 0.5);
-  backdrop-filter: blur(8px);
+  background: rgba(45, 55, 72, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .light-theme .modal-content {
-  background: var(--light-bg-card);
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
   border: 1px solid var(--light-border-color);
-  box-shadow: var(--light-shadow-xl);
+  box-shadow: 
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .light-theme .modal-header {
@@ -278,7 +360,7 @@ body.light-theme {
 
 /* ========== TEACHER DASHBOARD - LIGHT THEME ========== */
 .light-theme .teacher-dashboard-container {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 25%, #ffffff 50%, #f1f5f9 75%, #f8fafc 100%);
 }
 
 .light-theme .teacher-header-icon {
@@ -672,9 +754,11 @@ body.light-theme {
 
 /* ========== NAVBAR - LIGHT THEME ========== */
 .light-theme .glassy-nav {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid var(--light-border-color);
-  box-shadow: var(--light-shadow-md);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .light-theme .logo-text {
@@ -700,6 +784,11 @@ body.light-theme {
   color: var(--light-text-secondary);
 }
 
+.light-theme .notification:hover {
+  color: var(--light-accent-blue);
+  background: rgba(108, 123, 127, 0.1);
+}
+
 .light-theme .profile-icon-link {
   color: var(--light-text-secondary);
 }
@@ -708,8 +797,26 @@ body.light-theme {
   color: var(--light-accent-blue);
 }
 
-.light-theme .badge {
-  background: var(--light-accent-pink);
+.light-theme .notification .badge,
+.light-theme .nav-right .notification .badge,
+.light-theme span.badge {
+  background: linear-gradient(135deg, var(--light-accent-blue), var(--light-accent-purple)) !important;
+  border: 2px solid var(--light-bg-card) !important;
+  box-shadow: 0 0 12px rgba(108, 123, 127, 0.4), 0 2px 8px rgba(122, 127, 138, 0.3) !important;
+  color: white !important;
+}
+
+@keyframes badgePulseLight {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(108, 123, 127, 0.4), 0 2px 8px rgba(122, 127, 138, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(108, 123, 127, 0.6), 0 2px 12px rgba(122, 127, 138, 0.5);
+  }
+}
+
+.light-theme .notification .badge {
+  animation: badgePulseLight 2s ease-in-out infinite !important;
 }
 
 .light-theme .signin-link {
@@ -717,12 +824,17 @@ body.light-theme {
 }
 
 .light-theme .get-started-btn {
-  background: linear-gradient(90deg, var(--light-accent-blue), var(--light-accent-purple));
-  box-shadow: var(--light-shadow-sm);
+  background: linear-gradient(135deg, var(--light-accent-blue) 0%, var(--light-accent-purple) 100%);
+  box-shadow: 
+    0 4px 12px rgba(74, 144, 184, 0.25),
+    0 2px 6px rgba(74, 144, 184, 0.15);
 }
 
 .light-theme .get-started-btn:hover {
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  box-shadow: 
+    0 6px 16px rgba(74, 144, 184, 0.3),
+    0 3px 8px rgba(74, 144, 184, 0.2);
+  transform: translateY(-1px);
 }
 
 .light-theme .logout-btn {
@@ -836,11 +948,21 @@ body.light-theme {
 
 /* ========== HOME PAGE - LIGHT THEME ========== */
 .light-theme .maindiv {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.88) 0%, rgba(241, 245, 249, 0.88) 25%, rgba(255, 255, 255, 0.88) 50%, rgba(241, 245, 249, 0.88) 75%, rgba(248, 250, 252, 0.88) 100%), 
+              url('../assets/backback.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
 .light-theme .maindiv2 {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.88) 0%, rgba(241, 245, 249, 0.88) 25%, rgba(255, 255, 255, 0.88) 50%, rgba(241, 245, 249, 0.88) 75%, rgba(248, 250, 252, 0.88) 100%), 
+              url('../assets/backback.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
 .light-theme .home-container {
@@ -866,8 +988,10 @@ body.light-theme {
 }
 
 .light-theme .btn-primary {
-  background: linear-gradient(90deg, var(--light-accent-blue), var(--light-accent-purple));
-  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, var(--light-accent-blue) 0%, var(--light-accent-purple) 100%);
+  box-shadow: 
+    0 4px 12px rgba(74, 144, 184, 0.25),
+    0 2px 6px rgba(74, 144, 184, 0.15);
 }
 
 .light-theme .glow-border {
@@ -1003,15 +1127,15 @@ body.light-theme {
 }
 
 .light-theme .testimonials-section {
-  background: linear-gradient(to bottom, #f0f9ff, #e0f2fe);
+  background: linear-gradient(to bottom, #f0f4f7, #e8eef3);
 }
 
 .light-theme .testimonials-section::before {
-  background: linear-gradient(to right, #f0f9ff, transparent);
+  background: linear-gradient(to right, #f0f4f7, transparent);
 }
 
 .light-theme .testimonials-section::after {
-  background: linear-gradient(to left, #f0f9ff, transparent);
+  background: linear-gradient(to left, #f0f4f7, transparent);
 }
 
 .light-theme .testimonials-header h2 {
@@ -1053,7 +1177,7 @@ body.light-theme {
 
 /* ========== LOGIN PAGE - LIGHT THEME ========== */
 .light-theme .auth-login-wrapper {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #f0f4f7 0%, #e8eef3 30%, #f7f9fb 70%, #f0f4f7 100%);
 }
 
 .light-theme .login-form {
@@ -1099,7 +1223,7 @@ body.light-theme {
 
 /* ========== CLASS OVERVIEW - LIGHT THEME ========== */
 .light-theme .class-overview-container {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #f0f4f7 0%, #e8eef3 30%, #f7f9fb 70%, #f0f4f7 100%);
 }
 
 .light-theme .class-overview-header-background {
@@ -1109,17 +1233,17 @@ body.light-theme {
 .light-theme .class-overview-header-pattern {
   background: radial-gradient(
       circle at 20% 50%,
-      rgba(59, 130, 246, 0.05) 0%,
+      rgba(74, 144, 184, 0.08) 0%,
       transparent 50%
     ),
     radial-gradient(
       circle at 80% 20%,
-      rgba(139, 92, 246, 0.05) 0%,
+      rgba(139, 127, 184, 0.06) 0%,
       transparent 50%
     ),
     radial-gradient(
       circle at 40% 80%,
-      rgba(59, 130, 246, 0.05) 0%,
+      rgba(74, 144, 184, 0.08) 0%,
       transparent 50%
     );
 }
@@ -1127,9 +1251,9 @@ body.light-theme {
 .light-theme .class-overview-header-gradient {
   background: linear-gradient(
     135deg,
-    rgba(59, 130, 246, 0.05) 0%,
-    rgba(139, 92, 246, 0.03) 50%,
-    rgba(59, 130, 246, 0.05) 100%
+    rgba(74, 144, 184, 0.08) 0%,
+    rgba(139, 127, 184, 0.05) 50%,
+    rgba(74, 144, 184, 0.08) 100%
   );
 }
 
@@ -1515,7 +1639,7 @@ body.light-theme {
 
 /* ========== VIVA TEST - LIGHT THEME ========== */
 .light-theme .viva-test-page-wrapper {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #f0f4f7 0%, #e8eef3 30%, #f7f9fb 70%, #f0f4f7 100%);
 }
 
 .light-theme .viva-container {
@@ -1584,7 +1708,7 @@ body.light-theme {
 
 /* ========== VIVA MONITOR - LIGHT THEME ========== */
 .light-theme .viva-monitor-container {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #f0f4f7 0%, #e8eef3 30%, #f7f9fb 70%, #f0f4f7 100%);
   color: var(--light-text-primary);
 }
 
@@ -1811,7 +1935,7 @@ body.light-theme {
 }
 
 .light-theme .viva-monitor-loading {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #f0f4f7 0%, #e8eef3 30%, #f7f9fb 70%, #f0f4f7 100%);
   color: var(--light-text-primary);
 }
 
@@ -1825,7 +1949,7 @@ body.light-theme {
 }
 
 .light-theme .viva-monitor-error {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #f0f4f7 0%, #e8eef3 30%, #f7f9fb 70%, #f0f4f7 100%);
   color: var(--light-text-primary);
 }
 
@@ -1843,7 +1967,7 @@ body.light-theme {
 
 /* ========== RESULT PAGE - LIGHT THEME ========== */
 .light-theme .simple-result-container {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #f0f4f7 0%, #e8eef3 30%, #f7f9fb 70%, #f0f4f7 100%);
   color: var(--light-text-primary);
 }
 
@@ -1959,7 +2083,7 @@ body.light-theme {
 
 /* ========== RESOURCES PAGE - LIGHT THEME ========== */
 .light-theme .resources-container {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #f0f4f7 0%, #e8eef3 30%, #f7f9fb 70%, #f0f4f7 100%);
 }
 
 .light-theme .resources-icon {
@@ -2011,7 +2135,7 @@ body.light-theme {
 
 /* ========== JOIN CLASS PAGE - LIGHT THEME ========== */
 .light-theme .joinclass-container {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #f0f4f7 0%, #e8eef3 30%, #f7f9fb 70%, #f0f4f7 100%);
   color: var(--light-text-primary);
 }
 
@@ -2288,7 +2412,7 @@ body.light-theme {
 
 /* ========== CLASS VIVAS PAGE - LIGHT THEME ========== */
 .light-theme .classvivaspage-container {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #f0f4f7 0%, #e8eef3 30%, #f7f9fb 70%, #f0f4f7 100%);
   color: var(--light-text-primary);
 }
 
@@ -2594,7 +2718,7 @@ body.light-theme {
 
 /* ========== REGISTER PAGE - LIGHT THEME ========== */
 .light-theme .auth-register-wrapper {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #f0f4f7 0%, #e8eef3 30%, #f7f9fb 70%, #f0f4f7 100%);
 }
 
 .light-theme .register-form {
@@ -2719,15 +2843,21 @@ body.light-theme {
 /* ========== GLOBAL LOADING OVERLAY - LIGHT THEME ========== */
 html.light-theme .global-loading-overlay,
 body.light-theme .global-loading-overlay {
-  background: rgba(15, 23, 42, 0.3);
-  backdrop-filter: blur(8px);
+  background: rgba(45, 55, 72, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 html.light-theme .global-loading-spinner,
 body.light-theme .global-loading-spinner {
-  background: var(--light-bg-card);
-  border: 1px solid var(--light-border-color);
-  box-shadow: var(--light-shadow-xl);
+  background: linear-gradient(145deg, #f7f9fb 0%, #f0f4f7 50%, #f7f9fb 100%);
+  border: 1px solid rgba(74, 144, 184, 0.2);
+  box-shadow: 
+    0 12px 28px -6px rgba(74, 144, 184, 0.18),
+    0 8px 20px -4px rgba(74, 144, 184, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 html.light-theme .global-spinner-icon,
@@ -2801,12 +2931,12 @@ body.light-theme .Toastify__toast-icon {
 
 /* ========== ANALYTICS PAGE - LIGHT THEME ========== */
 .light-theme .analytics-container {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #f0f4f7 0%, #e8eef3 30%, #f7f9fb 70%, #f0f4f7 100%);
   color: var(--light-text-primary);
 }
 
 .light-theme .analytics-loading {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f8fafc 100%);
+  background: linear-gradient(135deg, #f0f4f7 0%, #e8eef3 30%, #f7f9fb 70%, #f0f4f7 100%);
   color: var(--light-text-primary);
 }
 
@@ -3348,4 +3478,47 @@ body .badge {
 /* Light theme specific badge color */
 .light-theme .badge {
   color: #4f46e5 !important;
+}
+
+/
+* ========== LOGO IMAGE - LIGHT THEME ========== */
+.light-theme .logo-image {
+  /* Logo image automatically switches based on theme in JSX */
+  filter: none;
+}
+
+.light-theme .logo-image:hover {
+  filter: brightness(0.9);
+}
+
+
+/* ========== ANIMATED LOGO - LIGHT THEME ========== */
+.light-theme .logo-icon-animated {
+  color: var(--light-accent-blue);
+}
+
+.light-theme .logo-icon-animated:hover {
+  color: var(--light-accent-purple);
+}
+
+.light-theme .logo-icon-animated svg {
+  filter: drop-shadow(0 0 8px rgba(108, 123, 127, 0.3));
+}
+
+.light-theme .logo-text {
+  background: linear-gradient(90deg, var(--light-accent-blue), var(--light-accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 200%;
+}
+
+.light-theme .logo-sub {
+  color: var(--light-text-tertiary);
+}
+
+
+/* ========== PLATFORM SUBTITLE TEXT - LIGHT THEME ========== */
+.light-theme .platform-subtitle-text {
+  color: var(--light-text-secondary);
+  opacity: 1;
 }
